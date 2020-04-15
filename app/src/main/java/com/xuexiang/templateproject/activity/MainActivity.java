@@ -17,6 +17,7 @@
 
 package com.xuexiang.templateproject.activity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -40,14 +41,17 @@ import com.xuexiang.templateproject.fragment.SettingsFragment;
 import com.xuexiang.templateproject.fragment.news.NewsFragment;
 import com.xuexiang.templateproject.fragment.profile.ProfileFragment;
 import com.xuexiang.templateproject.fragment.trending.TrendingFragment;
+import com.xuexiang.templateproject.utils.Utils;
 import com.xuexiang.templateproject.utils.XToastUtils;
 import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xui.adapter.FragmentAdapter;
 import com.xuexiang.xui.utils.ResUtils;
+import com.xuexiang.xui.utils.ThemeUtils;
 import com.xuexiang.xui.widget.imageview.RadiusImageView;
 import com.xuexiang.xutil.XUtil;
 import com.xuexiang.xutil.common.ClickUtils;
 import com.xuexiang.xutil.common.CollectionUtils;
+import com.xuexiang.xutil.display.Colors;
 
 import butterknife.BindView;
 
@@ -57,7 +61,7 @@ import butterknife.BindView;
  * @author xuexiang
  * @since 2019-07-07 23:53
  */
-public class MainActivity extends BaseActivity implements View.OnClickListener, ViewPager.OnPageChangeListener, BottomNavigationView.OnNavigationItemSelectedListener, ClickUtils.OnClick2ExitListener {
+public class MainActivity extends BaseActivity implements View.OnClickListener, ViewPager.OnPageChangeListener, BottomNavigationView.OnNavigationItemSelectedListener, ClickUtils.OnClick2ExitListener, Toolbar.OnMenuItemClickListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -100,6 +104,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     private void initViews() {
         mTitles = ResUtils.getStringArray(R.array.home_titles);
         toolbar.setTitle(mTitles[0]);
+        toolbar.inflateMenu(R.menu.menu_main);
+        toolbar.setOnMenuItemClickListener(this);
 
         initHeader();
 
@@ -122,11 +128,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         TextView tvAvatar = headerView.findViewById(R.id.tv_avatar);
         TextView tvSign = headerView.findViewById(R.id.tv_sign);
 
+        if (Utils.isColorDark(ThemeUtils.resolveColor(this, R.attr.colorAccent))) {
+            tvAvatar.setTextColor(Colors.WHITE);
+            tvSign.setTextColor(Colors.WHITE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ivAvatar.setImageTintList(ResUtils.getColors(R.color.xui_config_color_white));
+            }
+        } else {
+            tvAvatar.setTextColor(ThemeUtils.resolveColor(this, R.attr.xui_config_color_title_text));
+            tvSign.setTextColor(ThemeUtils.resolveColor(this, R.attr.xui_config_color_explain_text));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ivAvatar.setImageTintList(ResUtils.getColors(R.color.xui_config_color_gray_3));
+            }
+        }
+
         // TODO: 2019-10-09 初始化数据
         ivAvatar.setImageResource(R.drawable.ic_default_head);
         tvAvatar.setText(R.string.app_name);
         tvSign.setText("这个家伙很懒，什么也没有留下～～");
-
         navHeader.setOnClickListener(this);
     }
 
@@ -138,8 +157,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         //侧边栏点击事件
         navView.setNavigationItemSelectedListener(menuItem -> {
             if (menuItem.isCheckable()) {
-                handleNavigationItemSelected(menuItem);
                 drawerLayout.closeDrawers();
+                return handleNavigationItemSelected(menuItem);
             } else {
                 switch (menuItem.getItemId()) {
                     case R.id.nav_settings:
@@ -177,6 +196,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         return false;
     }
 
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_privacy:
+                Utils.showPrivacyDialog(this, null);
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
 
     @SingleClick
     @Override
@@ -264,4 +294,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     public void onExit() {
         XUtil.get().exitApp();
     }
+
+
 }
